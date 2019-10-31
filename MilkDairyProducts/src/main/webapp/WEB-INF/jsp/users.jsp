@@ -9,7 +9,7 @@
 <body>
 	<div align="center">
     <h1>User List</h1>
-    <a href="/new">Create New User</a>
+    <a href="/new">Create New User Of Dairy product</a>
     <br/><br/>
     <table border="1" cellpadding="10">
         <thead>
