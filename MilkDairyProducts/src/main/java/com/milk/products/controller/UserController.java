@@ -1,48 +1,63 @@
 package com.milk.products.controller;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import com.milk.products.exception.ResourceNotFoundException;
 import com.milk.products.pojo.User;
 import com.milk.products.services.UserServices;
 
 @RestController
 @CrossOrigin
+@RequestMapping("/user")
 public class UserController {
 
 	@Autowired
 	private UserServices userServices;
 	
-	@RequestMapping("/users")
+	@GetMapping("/all")
 	public List<User> getAllUsers(){
 		return userServices.getAllUsers();		
 	}
 	
-	@RequestMapping("/users/{user_name}")
-	public Optional<User> getUser(@PathVariable String user_name) {
-		return userServices.getUser(user_name);
+	@GetMapping("/all/{user_id}")
+	public ResponseEntity<User> getUser(@PathVariable String user_id) throws ResourceNotFoundException {
+		User user = userServices.getUser(user_id).orElseThrow(() -> new ResourceNotFoundException("User not found this id: "+user_id));
+		return ResponseEntity.ok().body(user);
 	}
 	
-	@RequestMapping(method = RequestMethod.POST, value = "/users")
-	public void saveUser(@RequestBody User user) {
-		userServices.addUser(user);
+	@PostMapping("/insert")
+	public User saveUser(@RequestBody User user) {
+		return userServices.addUser(user);
 	}
 	
-	@RequestMapping(method = RequestMethod.PUT, value = "/users/{user_id}")
-	public void updateUser(@RequestBody User user,@PathVariable String user_id) {
-		userServices.updateUser(user,user_id);
+	@PutMapping("/update/{user_id}")
+	public ResponseEntity<User> updateUser(@Valid @RequestBody User userdetails,@PathVariable String user_id) throws ResourceNotFoundException {
+		User user = userServices.getUser(user_id).orElseThrow(() -> new ResourceNotFoundException("User not found this id: "+user_id));
+		
+		user.setFull_name(userdetails.getFull_name());
+		user.setEmail_id(userdetails.getEmail_id());
+		user.setMobile_no(userdetails.getMobile_no());
+		user.setGender(userdetails.getGender());
+		user.setDob(userdetails.getDob());
+		final User updateUser = userServices.addUser(user);
+				
+		return ResponseEntity.ok().body(updateUser);
 	}
 	
-	@RequestMapping(method = RequestMethod.DELETE, value = "/users/{user_name}")
-	public void deleteUser(@RequestBody User user,@PathVariable String user_name) {
-		userServices.deleteUser(user_name);
+	@DeleteMapping("/delete/{user_id}")
+	public Map<String, Boolean> deleteUser(@PathVariable String user_id) throws ResourceNotFoundException {
+		User user = userServices.getUser(user_id).orElseThrow(() -> new ResourceNotFoundException("User not found this id: "+user_id));
+		
+		userServices.deleteUser(user);
+		Map<String, Boolean> response = new HashMap<>();
+		response.put("delete", Boolean.TRUE);
+		return response;
 	}
 	
 }
